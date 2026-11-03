@@ -12,6 +12,7 @@ from configs.configs import (
     DATA_DIR,
     RAW_DATA_DIR,
     H5_DATASET_PATH,
+    BIN_SIZE,
     BATCH_SIZE, 
     LEARNING_RATE,
     EPOCHS
@@ -208,7 +209,7 @@ def main():
 
                 for image_path in sorted(folder.glob("image_*.cbf")):
                     image = load_fabio_image(image_path)
-                    preprocessed_image = preprocess_image(image, bin_size=4)
+                    preprocessed_image = preprocess_image(image, bin_size=BIN_SIZE)
                     log_file_path = folder / f"log_{image_path.stem.split('_')[-1]}.txt"
                     x_offset, z_offset = calculate_offsets_from_log(log_file_path, best_hexapod_x, best_hexapod_z)
 
