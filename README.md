@@ -40,6 +40,31 @@ Units: same as the hexapod log. Sign: positive = image is displaced in +x / +z f
 
 ### HDF5 layout
 data_point_<N>/
-  image     float32, (H/4, W/4)
+  image     float32, (H/12, W/12)
   x_offset  float64, scalar
   z_offset  float64, scalar
+
+### Usage
+```bash
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/data_preprocessing.py
+```
+
+## 3. Data Splitting
+
+Script: `src/optics_alignment_regression/make_split.py`. Output: `data/split_data.h5`
+
+- Split the preprocessed_dataset into train and test set
+- Store as split_data.h5
+
+### Split file layout
+train/
+  image     float32, (N_train, H/12, W/12)
+  targets   float32, (N_train, 2)   # [x_offset, z_offset]
+test/
+  image     float32, (N_test, H/12, W/12)
+  targets   float32, (N_test, 2)
+
+### Usage
+```bash
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/make_split.py
+```

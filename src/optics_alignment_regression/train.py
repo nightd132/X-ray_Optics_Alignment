@@ -12,6 +12,7 @@ from configs.configs import (
     ROOT_DIR,
     PROJECT_DIR,
     DATA_DIR,
+    H5_DATASET_PATH,
     BATCH_SIZE, 
     LEARNING_RATE,
     EPOCHS
@@ -74,3 +75,13 @@ def train_model(h5_file_path):
         avg_val_loss = val_loss / len(val_loader)
 
         print(f"Epoch [{epoch+1}/{EPOCHS}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}")
+
+    # Save the trained model checkpoint
+    torch.save(model.state_dict(), CHECKPOINT_DIR / "best_model.pth")
+
+def main():
+    # Train the model using the preprocessed dataset
+    train_model(h5_file_path=H5_DATASET_PATH)
+
+if __name__ == "__main__":
+    main()
