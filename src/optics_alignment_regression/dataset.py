@@ -20,3 +20,17 @@ def load_h5_dataset(file_path):
             images[i] = f[k]["image"][()]
             offsets[i] = (f[k]["x_offset"][()], f[k]["z_offset"][()])
     return {"keys": keys, "images": images, "offsets": offsets}
+
+def load_split_h5(path, split):
+    """
+    Load a specific split (train or test) from the HDF5 file.
+
+    Parameters:
+    - path (str): Path to the HDF5 file.
+    - split (str): The split to load ("train" or "test").
+    
+    Returns:
+    - tuple: A tuple containing the images and targets for the specified split.
+    """
+    with h5py.File(path, "r") as f:
+        return f[split]["image"][()], f[split]["targets"][()]

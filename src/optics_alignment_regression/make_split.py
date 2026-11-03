@@ -28,7 +28,7 @@ def split_dataset(h5_file_path, test_size=0.2, random_state=42):
     train_idx, test_idx = train_test_split(
         idx, test_size=test_size, random_state=random_state
     )
-    train_idx.sort(); test_idx.sort()   # h5py needs sorted indices
+    train_idx.sort(); test_idx.sort()
 
     return (images[train_idx], images[test_idx],
             targets[train_idx], targets[test_idx])

@@ -5,14 +5,18 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = ROOT_DIR / "src" / "optics_alignment_regression"
 DATA_DIR = ROOT_DIR / "data"
 RAW_DATA_DIR = ROOT_DIR / "data" / "Mainz_2022-10_AXO-Optics-Scan-forML"
-CHECKPOINT_DIR = ROOT_DIR/ "outputs" / "checkpoints"
+OUTPUT_DIR = ROOT_DIR / "outputs"
+CHECKPOINT_DIR = OUTPUT_DIR / "checkpoints"
 H5_DATASET_PATH = DATA_DIR / "preprocessed_dataset.h5"
+TRAIN_TEST_SPLIT_PATH = DATA_DIR / "split_dataset.h5"
+TRAIN_VAL_LOSS_HISTORY_PATH = OUTPUT_DIR / "train_val_loss_history.npz"
+EVALUATION_RESULTS_PATH = OUTPUT_DIR / "evaluation_results.npz"
 
 # Preprocessing parameters
 BIN_SIZE = 12  # Size of the binning window for image preprocessing
 
 
 # Training parameters
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 LEARNING_RATE = 0.001
-EPOCHS = 50
+EPOCHS = 100
