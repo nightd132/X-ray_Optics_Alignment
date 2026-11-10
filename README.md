@@ -125,7 +125,9 @@ Here is 4 set up we've run
 
 ---
 **NOTE**
+
 for using --binsize N (e.g --binsize 8), you have to run the make_processed.py with this set up first to get the data for training.
+
 ---
 
 ## 7. Evaluation
