@@ -33,7 +33,8 @@ Script: `src/optics_alignment_regression/create_dataset.py`. Output: `data/raw_d
 Units: same as the hexapod log. Sign: positive = image is displaced in +x / +z from the optimum. The network predicts this offset; to correct, move the hexapod by `-offset`.
 
 ### HDF5 layout
-```data_point_<N>/
+```
+data_point_<N>/
   image     float32,
   x_offset  float64, scalar
   z_offset  float64, scalar
@@ -54,7 +55,8 @@ Script: `src/optics_alignment_regression/create_dataset.py`. Output: `data/proce
 - Normalisation is stored (all pixels in range [0, 1]).
 
 ### HDF5 layout
-```data_point_<N>/
+```
+data_point_<N>/
   image     float32, # H/N x W/N
   x_offset  float64, scalar
   z_offset  float64, scalar
@@ -76,7 +78,8 @@ Script: `src/optics_alignment_regression/make_split.py`. Output: `data/split.npz
 - Here we just split and store the indices to reduce the storage.
 
 ### Split file layout
-```"train" : [0, 1, ..., 0.7*N-1]
+```
+"train" : [0, 1, ..., 0.7*N-1]
 "val": [0.7*N, ..., 0.85*N -1]
 "test":[0.85*N, ..., N]
 ```
