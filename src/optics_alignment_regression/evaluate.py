@@ -8,7 +8,7 @@ from src.optics_alignment_regression.dataset import load_split_h5, load_h5_datas
 
 from configs.configs import (
     CHECKPOINT_DIR,
-    H5_DATASET_PATH,
+    H5_RAW_DATASET_PATH,
     ROOT_DIR,
     PROJECT_DIR,
     TRAIN_TEST_SPLIT_PATH,
