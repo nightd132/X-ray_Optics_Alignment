@@ -4,13 +4,14 @@ import numpy as np
 import argparse
 from torch.utils.data import DataLoader
 from pathlib import Path
+import csv
+from tqdm import tqdm
 
 from src.optics_alignment_regression.model import OpticsAlignmentRegressionModel
 from src.optics_alignment_regression.dataset import X_Ray_Optics_Dataset
 
 from configs.configs import (
     CHECKPOINT_DIR,
-    H5_RAW_DATASET_PATH,
     TRAIN_VAL_TEST_INDICES_SPLIT_PATH,
     DATA_DIR,
     NUM_WORKER,
@@ -64,8 +65,9 @@ def load_checkpoint(path, device="cpu"):
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
+    progress_bar = tqdm(loader, desc="Training",leave=False)
     running_loss = 0.0
-    for images, offsets in loader:
+    for images, offsets in progress_bar:
         images, offsets = images.to(device), offsets.to(device)
         optimizer.zero_grad()
         output_offsets = model(images)
@@ -73,19 +75,53 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         loss.backward()
         optimizer.step()
         running_loss += loss.item() * images.size(0)
+        progress_bar.set_postfix(
+            loss=f"{running_loss:.6f}"
+        )
     return running_loss/len(loader.dataset)
 
 @torch.no_grad()
 def evaluate(model, loader, criterion, device):
     model.eval()
+    progress_bar = tqdm(loader, desc="Evaluation", leave=False)
     eval_loss = 0.0
-    for images, offsets in loader:
+    for images, offsets in progress_bar:
         images, offsets = images.to(device), offsets.to(device)
         output_offsets = model(images)
         loss = criterion(output_offsets, offsets)
         eval_loss += loss.item() * images.size(0)
+        progress_bar.set_postfix(
+            loss=f"{eval_loss:.6f}"
+        )
     return eval_loss/ len(loader.dataset)
 
+def save_experiment_summary(results, path):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    file_exists = path.exists()
+
+    with path.open("a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=results.keys())
+
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerow(results)
+
+def save_loss_history(path, train_hist, val_hist):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("w", newline="") as f:
+        writer = csv.writer(f)
+
+        writer.writerow(["epoch", "train_loss", "val_loss"])
+
+        for epoch, (train_loss, val_loss) in enumerate(
+            zip(train_hist, val_hist), start=1
+        ):
+            writer.writerow([epoch, train_loss, val_loss])
 
 def train_model(model, train_dl, val_dl, criterion, optimizer, device, epochs, ckpt_path, config):
 
@@ -96,30 +132,28 @@ def train_model(model, train_dl, val_dl, criterion, optimizer, device, epochs, c
     # Training loop
     print("Starting training...")
     train_hist, val_hist = [], []
+
     for epoch in range(epochs):
-        print(f"Epoch {epoch+1}/{epochs}")
         
         avg_train_loss = train_one_epoch(model, train_dl, criterion, optimizer, device)
         train_hist.append(avg_train_loss)
 
-        print(f"Epoch [{epoch+1}/{epochs}], Train Loss: {avg_train_loss:.6f}")
 
         # Validation loop
-        print("Starting validation...")
-
         avg_val_loss = evaluate(model, val_dl, criterion, device)
         val_hist.append(avg_val_loss)
-        print(f"Epoch [{epoch+1}/{epochs}], Val Loss: {avg_val_loss:.6f}")
 
         if avg_val_loss < best_val:
             best_val = avg_val_loss
+            best_epoch = epoch + 1
             # Save the best model checkpoint
             save_checkpoint(ckpt_path / "best.pt", model, epoch, best_val, config, optimizer)
             print(f"Best model saved with validation loss: {best_val:.6f}")
 
         print(f"Epoch [{epoch+1}/{epochs}], Train Loss: {avg_train_loss:.6f}, Val Loss: {avg_val_loss:.6f}")
         save_checkpoint(ckpt_path / "last.pt", model, epoch, avg_val_loss, config, optimizer)
-        np.savez(ckpt_path/"train_val_loss_history.npz", train_loss=train_hist, val_loss=val_hist)
+        save_loss_history(ckpt_path/"train_val_loss_history.csv", train_hist, val_hist)
+    return best_val, best_epoch
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -158,7 +192,22 @@ def main():
                   lr=args.lr, batch=args.batch, weightdecay=args.weightdecay)
     
     # training model
-    train_model(model, train_dl, val_dl, criterion, optimizer, device, args.epoch, ckpt_path, config)
+    best_val, best_epoch = train_model(model, train_dl, val_dl, criterion, optimizer, device, args.epoch, ckpt_path, config)
+    results = {
+        "experiment": ckpt_path.name,
+        "binsize": args.binsize,
+        "epochs": args.epoch,
+        "learning_rate": args.lr,
+        "batch_size": args.batch,
+        "weight_decay": args.weightdecay,
+        "best_epoch": best_epoch,
+        "best_val_loss": best_val,
+    }
+
+    save_experiment_summary(
+        results,
+        CHECKPOINT_DIR / "experiments_summary.csv"
+    )
 
 if __name__ == "__main__":
     main()

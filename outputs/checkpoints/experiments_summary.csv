@@ -1,0 +1,5 @@
+experiment,binsize,epochs,learning_rate,batch_size,weight_decay,best_epoch,best_val_loss
+binsize_12_epoch_100_lr_0.001_batch_64_weightdecay_0.01,12,100,0.001,64,0.01,82,0.0010106247069325096
+binsize_12_epoch_100_lr_0.01_batch_64_weightdecay_0.01,12,100,0.01,64,0.01,100,0.0008866436139417996
+binsize_12_epoch_100_lr_0.0001_batch_64_weightdecay_0.01,12,100,0.0001,64,0.01,76,0.0015684353504463024
+binsize_12_epoch_100_lr_0.1_batch_64_weightdecay_0.01,12,100,0.1,64,0.01,65,0.08155490219358948
