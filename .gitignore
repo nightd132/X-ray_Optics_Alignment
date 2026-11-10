@@ -3,6 +3,7 @@
 *split_dataset.h5
 *raw_dataset.h5
 *.h5
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
