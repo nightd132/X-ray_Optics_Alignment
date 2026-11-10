@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from typing import Dict, Tuple
 import re
+from tqdm import tqdm
 
 def load_fabio_image(file_path: str) -> np.ndarray:
     """
@@ -98,3 +99,20 @@ def save_data_to_h5_file(h5_file, image, offsets, group_name):
     grp.create_dataset('image', data=image, compression='gzip')
     grp.create_dataset('x_offset', data=offsets[0])
     grp.create_dataset('z_offset', data=offsets[1])
+
+def make_processed(raw_path, out_path, binsize):
+    with h5py.File(raw_path, "r") as fin:
+        N = sum(k.startswith("data_point_") for k in fin.keys())
+
+        # shape from the first sample
+        x0 = preprocess_image(fin["data_point_0"]["image"][()].astype(np.float32), binsize)
+
+        with h5py.File(out_path, "w") as fout:
+            images = fout.create_dataset("images", (N, *x0.shape), dtype="float32")
+            offsets = fout.create_dataset("offsets", (N, 2), dtype="float32")
+            fout.attrs["binsize"] = binsize
+
+            for j in tqdm(range(N)):
+                g = fin[f"data_point_{j}"]
+                images[j] = preprocess_image(g["image"][()].astype(np.float32), binsize)
+                offsets[j] = (g["x_offset"][()], g["z_offset"][()])

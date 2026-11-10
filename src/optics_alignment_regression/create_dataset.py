@@ -6,15 +6,15 @@ import re
 
 from configs.configs import (
     RAW_DATA_DIR,
-    H5_DATASET_PATH
+    H5_RAW_DATASET_PATH
 )
 
 def main():
     # regex to filter the path of data
     folder_re = re.compile(r"Mainz_\d{8}_\d{2}_AXO-Optics-Scan-forML_\d+W_Al-tape_noFlTu_SourceDet-\d+cm_detPos\d+")
 
-    H5_DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with h5py.File(H5_DATASET_PATH, 'w') as h5_file:
+    H5_RAW_DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(H5_RAW_DATASET_PATH, 'w') as h5_file:
         idx = 0
         for folder in sorted(Path(RAW_DATA_DIR).glob("Mainz_*")):
             if not folder_re.match(folder.name):
@@ -39,7 +39,7 @@ def main():
                     save_data_to_h5_file(h5_file, image, (x_offset, z_offset), group_name)
                     idx += 1
 
-                    print(f"Saved image and offsets as group '{group_name}' to: {H5_DATASET_PATH}")
+                    print(f"Saved image and offsets as group '{group_name}' to: {H5_RAW_DATASET_PATH}")
 
             except FileNotFoundError as e:
                 print(f"File not found error while processing folder {folder}: {e}")

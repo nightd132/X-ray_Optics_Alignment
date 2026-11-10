@@ -10,7 +10,6 @@ CHECKPOINT_DIR = OUTPUT_DIR / "checkpoints"
 H5_RAW_DATASET_PATH = DATA_DIR / "raw_dataset.h5"
 TRAIN_VAL_TEST_INDICES_SPLIT_PATH = DATA_DIR/ "split.npz"
 TRAIN_TEST_SPLIT_PATH = DATA_DIR / "split_dataset.h5"
-TRAIN_VAL_LOSS_HISTORY_PATH = OUTPUT_DIR / "train_val_loss_history.npz"
 EVALUATION_RESULTS_PATH = OUTPUT_DIR / "evaluation_results.npz"
 
 # Preprocessing parameters
@@ -21,3 +20,5 @@ BIN_SIZE = 12  # Size of the binning window for image preprocessing
 BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 EPOCHS = 100
+NUM_WORKER = 4
+WEIGHT_DECAY = 0.01
