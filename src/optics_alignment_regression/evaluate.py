@@ -6,6 +6,8 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 import csv
 from tqdm import tqdm
+import random
+import pandas as pd
 
 from src.optics_alignment_regression.model import OpticsAlignmentRegressionModel
 from src.optics_alignment_regression.dataset import X_Ray_Optics_Dataset
@@ -51,16 +53,20 @@ def evaluate(model, loader, criterion, device):
     model.eval()
     progress_bar = tqdm(loader, desc="Test")
     eval_loss = 0.0
+    preds, targets = [], []
     for images, offsets in progress_bar:
         images, offsets = images.to(device), offsets.to(device)
         output_offsets = model(images)
         loss = criterion(output_offsets, offsets)
         eval_loss += loss.item() * images.size(0)
+        preds.append(output_offsets.cpu().numpy())
+        targets.append(offsets.cpu().numpy())
         progress_bar.set_postfix(
             loss = f"{eval_loss:.6f}"
         )
-
-    return eval_loss/ len(loader.dataset)
+    preds = np.concatenate(preds)
+    targets = np.concatenate(targets)
+    return eval_loss/ len(loader.dataset), preds, targets
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -95,16 +101,21 @@ def save_evaluation_results(loss, args, path):
             writer.writeheader()
 
         writer.writerow(results)
-    
 
+def seed_everything(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 def main():
     # Parse arguments from CLI
     args = parse_args()
     
     # Set random seed for reproducibility
-    torch.manual_seed(42)
-    np.random.seed(42)
+    seed_everything(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Build data loader
@@ -121,8 +132,18 @@ def main():
     criterion = nn.MSELoss()
     
     # evaluate model
-    test_loss = evaluate(model, test_dl, criterion, device)
+    test_loss, preds, targets = evaluate(model, test_dl, criterion, device)
     save_evaluation_results(test_loss, args, EVALUATION_RESULTS_PATH)
+    df = pd.DataFrame({
+        "target_x": targets[:, 0],
+        "target_z": targets[:, 1],
+        "pred_x":   preds[:, 0],
+        "pred_z":   preds[:, 1],
+    })
+    df["err_x"] = df["pred_x"] - df["target_x"]
+    df["err_z"] = df["pred_z"] - df["target_z"]
+
+    df.to_csv(ckpt_path / "test_predictions.csv", index=False, float_format="%.6g")
 
 
 if __name__ == "__main__":

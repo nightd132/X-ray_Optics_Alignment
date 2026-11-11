@@ -115,12 +115,14 @@ Script: `src/optics_alignment_regression/train.py`. Output: `output/checkpoint/*
   - WEIGHT_DECAY = 0.01 --weightdecay
 
 ### Usage
-Here is 4 set up we've run
+Here are the setups we've run
 ```bash
     PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.1
     PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.01
     PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.001
     PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.0001
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.01 --epoch 150
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.01 --epoch 50
 ```
 
 ---
@@ -132,18 +134,15 @@ for using --binsize N (e.g --binsize 8), you have to run the make_processed.py w
 
 ## 7. Evaluation
 
-Script: `src/optics_alignment_regression/evaluate.py`. Output: `output/evaluation_results.csv`
+Script: `src/optics_alignment_regression/evaluate.py`. Output: `output/evaluation_results.csv` and `output/checkpoints/*/test_predictions.csv`
 
 - A normal evaluation for neural network process
 - We save the setup and the loss to the output file.
+- Best model for evaluation with lr = 0.01 and epoch = 150
 
 ### Usage
-Here is 4 set up we've run
 ```bash
-    PYTHONPATH="$PWD" python src/optics_alignment_regression/evaluate.py --lr 0.1
-    PYTHONPATH="$PWD" python src/optics_alignment_regression/evaluate.py --lr 0.01
-    PYTHONPATH="$PWD" python src/optics_alignment_regression/evaluate.py --lr 0.001
-    PYTHONPATH="$PWD" python src/optics_alignment_regression/evaluate.py --lr 0.0001
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/evaluate.py --lr 0.01 --epoch 150
 ```
 
 ---
