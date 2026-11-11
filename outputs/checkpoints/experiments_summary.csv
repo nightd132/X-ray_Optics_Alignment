@@ -1,5 +1,8 @@
 experiment,binsize,epochs,learning_rate,batch_size,weight_decay,best_epoch,best_val_loss
-binsize_12_epoch_100_lr_0.001_batch_64_weightdecay_0.01,12,100,0.001,64,0.01,82,0.0010106247069325096
-binsize_12_epoch_100_lr_0.01_batch_64_weightdecay_0.01,12,100,0.01,64,0.01,100,0.0008866436139417996
-binsize_12_epoch_100_lr_0.0001_batch_64_weightdecay_0.01,12,100,0.0001,64,0.01,76,0.0015684353504463024
-binsize_12_epoch_100_lr_0.1_batch_64_weightdecay_0.01,12,100,0.1,64,0.01,65,0.08155490219358948
+binsize_12_epoch_100_lr_0.1_batch_64_weightdecay_0.01,12,100,0.1,64,0.01,69,0.08157631264239087
+binsize_12_epoch_100_lr_0.01_batch_64_weightdecay_0.01,12,100,0.01,64,0.01,100,0.000950681574537191
+binsize_12_epoch_100_lr_0.001_batch_64_weightdecay_0.01,12,100,0.001,64,0.01,97,0.0010165679720940627
+binsize_12_epoch_100_lr_0.0001_batch_64_weightdecay_0.01,12,100,0.0001,64,0.01,71,0.001343046616387924
+binsize_12_epoch_150_lr_0.01_batch_64_weightdecay_0.01,12,150,0.01,64,0.01,117,0.0009303081885021657
+binsize_12_epoch_50_lr_0.01_batch_64_weightdecay_0.01,12,50,0.01,64,0.01,49,0.0013261794109650756
+binsize_12_epoch_100_lr_0.01_batch_64_weightdecay_0.0,12,100,0.01,64,0.0,96,0.0015172470347429908

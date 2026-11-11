@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 import csv
 from tqdm import tqdm
+import random
 
 from src.optics_alignment_regression.model import OpticsAlignmentRegressionModel
 from src.optics_alignment_regression.dataset import X_Ray_Optics_Dataset
@@ -22,6 +23,19 @@ from configs.configs import (
     EPOCHS
 )
 
+def seed_everything(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+def seed_worker(worker_id):
+    s = torch.initial_seed() % 2**32
+    np.random.seed(s)
+    random.seed(s)
+
 def build_data_loaders(args):
     split_idx = np.load(TRAIN_VAL_TEST_INDICES_SPLIT_PATH)
     train_idx = split_idx["train"]
@@ -33,9 +47,11 @@ def build_data_loaders(args):
         )
     train_ds = X_Ray_Optics_Dataset(processed_data_path, train_idx)
     val_ds = X_Ray_Optics_Dataset(processed_data_path, val_idx)
-
+    g = torch.Generator()
+    g.manual_seed(42)
     train_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=True, 
-                          num_workers=args.numworker, pin_memory=True)
+                          num_workers=args.numworker, pin_memory=True,
+                          worker_init_fn=seed_worker, generator=g)
     val_dl = DataLoader(val_ds, batch_size=args.batch, shuffle=False, num_workers=args.numworker)
     return train_dl, val_dl
 
@@ -172,8 +188,7 @@ def main():
     args = parse_args()
     
     # Set random seed for reproducibility
-    torch.manual_seed(42)
-    np.random.seed(42)
+    seed_everything(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Build data loader
