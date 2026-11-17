@@ -11,6 +11,7 @@ H5_RAW_DATASET_PATH = DATA_DIR / "raw_dataset.h5"
 TRAIN_VAL_TEST_INDICES_SPLIT_PATH = DATA_DIR/ "split.npz"
 TRAIN_TEST_SPLIT_PATH = DATA_DIR / "split_dataset.h5"
 EVALUATION_RESULTS_PATH = OUTPUT_DIR / "evaluation_results.csv"
+EXPERIMENT_SUMMARY_CSV_PATH = CHECKPOINT_DIR/ "experiments_summary.csv"
 
 # Preprocessing parameters
 BIN_SIZE = 12  # Size of the binning window for image preprocessing
