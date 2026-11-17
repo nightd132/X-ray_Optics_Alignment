@@ -13,7 +13,8 @@ def load_predictor():
     best_experiment = find_best_experiment(EXPERIMENT_SUMMARY_CSV_PATH)
     ckt_path = CHECKPOINT_DIR/ best_experiment["experiment"] / "best.pt"
     st.text(ckt_path)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
     return OpticsAlignmentPredictor(ckt_path, device)
 
 uploaded_file = st.file_uploader("Choose the file image", type=["cbf"])
@@ -21,15 +22,15 @@ predictor = load_predictor()
 if uploaded_file is not None:
     if st.button("Predict"):
         stream = BytesIO(uploaded_file.getvalue())
-        predict_result = predictor.predict(stream)
+        predict_result = predictor.predict(image_path=stream)
 
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("Raw Image")
-            st.image(predict_result["raw_image"])
+            st.image(predict_result["raw_image"], clamp=True)
         with col2:
             st.subheader("Preprocessed Image")
-            st.image(predict_result["preprocessed_image"])
+            st.image(predict_result["preprocessed_image"], clamp=True)
 
         st.subheader("Predicted Offset x:")
         st.metric(label="Offset x", value=f"{predict_result['predicted_offset_x']}")
