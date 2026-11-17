@@ -11,41 +11,44 @@ import pandas as pd
 
 from src.optics_alignment_regression.model import OpticsAlignmentRegressionModel
 from src.optics_alignment_regression.dataset import X_Ray_Optics_Dataset
+from src.optics_alignment_regression.utils import seed_everything, load_checkpoint, find_best_experiment
 
 from configs.configs import (
     CHECKPOINT_DIR,
     TRAIN_VAL_TEST_INDICES_SPLIT_PATH,
     DATA_DIR,
     NUM_WORKER,
-    WEIGHT_DECAY,
-    BIN_SIZE,
-    BATCH_SIZE, 
-    LEARNING_RATE,
-    EPOCHS,
-    EVALUATION_RESULTS_PATH
+    EVALUATION_RESULTS_PATH,
+    EXPERIMENT_SUMMARY_CSV_PATH
 )
 
-def load_checkpoint(path, device="cpu"):
-    ckpt = torch.load(path, map_location=device)
-    cfg = ckpt["config"]
-    model = OpticsAlignmentRegressionModel(
-        output_dim=cfg["output_dim"], input_dim=tuple(cfg["input_dim"])
-    ).to(device)
-    model.load_state_dict(ckpt["model_state"])
-    model.eval()
-    return model, cfg
+def build_data_loaders(experiment):
 
-def build_data_loaders(args):
     split_idx = np.load(TRAIN_VAL_TEST_INDICES_SPLIT_PATH)
     test_idx = split_idx["test"]
-    processed_data_path = DATA_DIR/ f"processed_bin{args.binsize}.h5"
+
+    binsize = int(experiment["binsize"])
+    batch_size = int(experiment["batch_size"])
+
+    processed_data_path = DATA_DIR / f"processed_bin{binsize}.h5"
+
     if not processed_data_path.exists():
         raise FileNotFoundError(
-            f"{processed_data_path} not found. Run: python scripts/make_processed.py --binsize {args.binsize}"
+            f"{processed_data_path} not found."
         )
-    test_ds = X_Ray_Optics_Dataset(processed_data_path, test_idx)
 
-    test_dl = DataLoader(test_ds, batch_size=args.batch, shuffle=False, num_workers=args.numworker)
+    test_ds = X_Ray_Optics_Dataset(
+        processed_data_path,
+        test_idx
+    )
+
+    test_dl = DataLoader(
+        test_ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=NUM_WORKER
+    )
+
     return test_dl
 
 @torch.no_grad()
@@ -68,72 +71,57 @@ def evaluate(model, loader, criterion, device):
     targets = np.concatenate(targets)
     return eval_loss/ len(loader.dataset), preds, targets
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--binsize", type=int, help="Which processed_bin{N}.h5 to train on", default=BIN_SIZE)
-    parser.add_argument("--epoch", type=int, help="Set the number of epoch (int e.g 100)", default=EPOCHS)
-    parser.add_argument("--lr", type=float, help="Set the learning rate (float e.g 0.01)", default=LEARNING_RATE)
-    parser.add_argument("--batch", type=int, help="Set the batch size (int e.g 32)", default=BATCH_SIZE)
-    parser.add_argument("--numworker", type=int, help="Set the number of workers (int e.g 4)", default=NUM_WORKER)
-    parser.add_argument("--weightdecay", type=float, help="Set the weight-decay for AdamW (flaot e.g 0.01)", default=WEIGHT_DECAY)
-
-    return parser.parse_args()
-
-def save_evaluation_results(loss, args, path):
+def save_evaluation_results( experiment, test_loss, preds, targets, path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
+    errors = preds - targets
+    
     results = {
-        "binsize": args.binsize,
-        "epochs": args.epoch,
-        "learning_rate": args.lr,
-        "batch_size": args.batch,
-        "weight_decay": args.weightdecay,
-        "test_loss": loss,
+        "experiment": experiment["experiment"],
+        "binsize": int(experiment["binsize"]),
+        "epochs": int(experiment["epochs"]),
+        "best_epoch": int(experiment["best_epoch"]),
+        "learning_rate": float(experiment["learning_rate"]),
+        "batch_size": int(experiment["batch_size"]),
+        "weight_decay": float(experiment["weight_decay"]),
+        "best_val_loss": float(experiment["best_val_loss"]),
+        "test_loss": test_loss,
+        "test_mae_x": np.abs(errors[:, 0]).mean(),
+        "test_mae_z": np.abs(errors[:, 1]).mean(),
+        "test_rmse_x": np.sqrt(np.mean(errors[:, 0] ** 2)),
+        "test_rmse_z": np.sqrt(np.mean(errors[:, 1] ** 2)),
     }
 
     file_exists = path.exists()
 
     with path.open("a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=results.keys())
+        writer = csv.DictWriter( f, fieldnames=results.keys())
 
         if not file_exists:
             writer.writeheader()
 
         writer.writerow(results)
 
-def seed_everything(seed=42):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
 def main():
-    # Parse arguments from CLI
-    args = parse_args()
-    
     # Set random seed for reproducibility
     seed_everything(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Build data loader
-    test_dl = build_data_loaders(args)
+    best_experiment = find_best_experiment(EXPERIMENT_SUMMARY_CSV_PATH)
+
+    ckpt_path = CHECKPOINT_DIR / best_experiment["experiment"]
+    test_dl = build_data_loaders(best_experiment)
     
     # Create checkpoint path with correspond setup
-    ckpt_path = CHECKPOINT_DIR /f"binsize_{args.binsize}_epoch_{args.epoch}_lr_{args.lr}_batch_{args.batch}_weightdecay_{args.weightdecay}"
-    if not ckpt_path.exists:
-        raise FileNotFoundError(
-            f"{ckpt_path} not found. Run: python scripts/make_processed.py --binsize {args.binsize}\n And python scripts/train.py --binsize {args.binsize} --epoch {args.epoch} --lr {args.lr} --weightdecay {args.weig}"
-        )
     # Initialize the model, loss function, and optimizer
     model, cfg = load_checkpoint(ckpt_path/ "best.pt", device)
     criterion = nn.MSELoss()
     
     # evaluate model
     test_loss, preds, targets = evaluate(model, test_dl, criterion, device)
-    save_evaluation_results(test_loss, args, EVALUATION_RESULTS_PATH)
+    save_evaluation_results(best_experiment, test_loss, preds, targets, EVALUATION_RESULTS_PATH)
     df = pd.DataFrame({
         "target_x": targets[:, 0],
         "target_z": targets[:, 1],

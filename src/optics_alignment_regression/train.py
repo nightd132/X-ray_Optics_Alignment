@@ -10,6 +10,7 @@ import random
 
 from src.optics_alignment_regression.model import OpticsAlignmentRegressionModel
 from src.optics_alignment_regression.dataset import X_Ray_Optics_Dataset
+from src.optics_alignment_regression.utils import seed_everything, parse_args, load_checkpoint
 
 from configs.configs import (
     CHECKPOINT_DIR,
@@ -22,14 +23,6 @@ from configs.configs import (
     LEARNING_RATE,
     EPOCHS
 )
-
-def seed_everything(seed=42):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
 
 def seed_worker(worker_id):
     s = torch.initial_seed() % 2**32
@@ -67,17 +60,6 @@ def save_checkpoint(path, model, epoch, val_loss, config, optimizer=None):
     if optimizer is not None:
         ckpt["optimizer_state"] = optimizer.state_dict()
     torch.save(ckpt, path)
-
-
-def load_checkpoint(path, device="cpu"):
-    ckpt = torch.load(path, map_location=device)
-    cfg = ckpt["config"]
-    model = OpticsAlignmentRegressionModel(
-        output_dim=cfg["output_dim"], input_dim=tuple(cfg["input_dim"])
-    ).to(device)
-    model.load_state_dict(ckpt["model_state"])
-    model.eval()
-    return model, cfg
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -170,18 +152,6 @@ def train_model(model, train_dl, val_dl, criterion, optimizer, device, epochs, c
         save_checkpoint(ckpt_path / "last.pt", model, epoch, avg_val_loss, config, optimizer)
         save_loss_history(ckpt_path/"train_val_loss_history.csv", train_hist, val_hist)
     return best_val, best_epoch
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--binsize", type=int, help="Which processed_bin{N}.h5 to train on", default=BIN_SIZE)
-    parser.add_argument("--epoch", type=int, help="Set the number of epoch (int e.g 100)", default=EPOCHS)
-    parser.add_argument("--lr", type=float, help="Set the learning rate (float e.g 0.01)", default=LEARNING_RATE)
-    parser.add_argument("--batch", type=int, help="Set the batch size (int e.g 32)", default=BATCH_SIZE)
-    parser.add_argument("--numworker", type=int, help="Set the number of workers (int e.g 4)", default=NUM_WORKER)
-    parser.add_argument("--weightdecay", type=float, help="Set the weight-decay for AdamW (flaot e.g 0.01)", default=WEIGHT_DECAY)
-
-    return parser.parse_args()
-
 
 def main():
     # Parse arguments from CLI
