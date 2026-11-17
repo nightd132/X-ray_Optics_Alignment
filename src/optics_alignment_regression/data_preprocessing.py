@@ -1,7 +1,6 @@
 from pathlib import Path
 import fabio, h5py
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from typing import Dict, Tuple
 import re
 from tqdm import tqdm
@@ -62,9 +61,10 @@ def normalize_image(image: np.ndarray) -> np.ndarray:
     Returns:
     - normalized_image (numpy.ndarray): The normalized image.
     """
-    scaler = MinMaxScaler()
-    normalized_image = scaler.fit_transform(image)
-    return normalized_image
+    lo, hi = image.min(), image.max()
+    if hi <= lo:
+        return np.zeros_like(image, dtype=np.float32)
+    return ((image - lo) / (hi - lo)).astype(np.float32)
 
 def preprocess_image(image: np.ndarray, bin_size: int) -> np.ndarray:
     """

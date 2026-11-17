@@ -142,11 +142,5 @@ Script: `src/optics_alignment_regression/evaluate.py`. Output: `output/evaluatio
 
 ### Usage
 ```bash
-    PYTHONPATH="$PWD" python src/optics_alignment_regression/evaluate.py --lr 0.01 --epoch 150
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/evaluate.py
 ```
-
----
-**NOTE**
-- For using --binsize N (e.g --binsize 8), you have to run the make_processed.py with this set up first to get the data for training.
-- Then you have to run the train.py with the same setup first.
----
