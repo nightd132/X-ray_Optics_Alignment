@@ -1,2 +1,2 @@
 experiment,binsize,epochs,best_epoch,learning_rate,batch_size,weight_decay,best_val_loss,test_loss,test_mae_x,test_mae_z,test_rmse_x,test_rmse_z
-binsize_12_epoch_150_lr_0.01_batch_64_weightdecay_0.01,12,150,117,0.01,64,0.01,0.0009303081885021657,0.001478411587538003,0.027797025,0.03274541,0.033748027,0.042636763
+binsize_12_epoch_150_lr_0.001_batch_64_weightdecay_0.001,12,150,119,0.001,64,0.001,0.0009177665308538719,0.0014603537591281947,0.033658072,0.025965312,0.042790234,0.033010654

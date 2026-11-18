@@ -4,6 +4,24 @@ import numpy as np
 from typing import Dict, Tuple
 import re
 from tqdm import tqdm
+from scipy import ndimage
+
+def fill_gaps(image: np.ndarray) -> np.ndarray:
+    """
+    Replace detector gap pixels (value < 0) with the nearest valid pixel.
+    
+    Parameters:
+    - image (numpy.ndarray): The input image to normalize.
+    
+    Returns:
+    - filled gap image (numpy.ndarray): The filled gap image.
+    """
+    image = image.astype(np.float32)
+    gap = image < 0
+    if not gap.any():
+        return image
+    idx = ndimage.distance_transform_edt(gap, return_distances=False, return_indices=True)
+    return image[tuple(idx)]
 
 def load_fabio_image(file_path: str) -> np.ndarray:
     """
@@ -78,6 +96,7 @@ def preprocess_image(image: np.ndarray, bin_size: int) -> np.ndarray:
     - binned_scaled_image (numpy.ndarray): The binned and normalized image.
     """
     # Ensure the image dimensions are divisible by the bin size
+    image = fill_gaps(image)
     new_shape = (image.shape[0] // bin_size, bin_size, image.shape[1] // bin_size, bin_size)
     binned_image = image[:new_shape[0]*bin_size, :new_shape[2]*bin_size].reshape(new_shape).mean(axis=(1, 3))
     binned_scaled_image = normalize_image(binned_image)
