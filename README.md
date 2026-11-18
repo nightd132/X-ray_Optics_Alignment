@@ -121,8 +121,11 @@ Here are the setups we've run
     PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.01
     PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.001
     PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.0001
-    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.01 --epoch 150
-    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.01 --epoch 50
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.001 --epoch 150
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.001 --epoch 150 --batch 128
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.001 --epoch 150 --batch 32
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.001 --epoch 150 --weightdecay 0.001
+    PYTHONPATH="$PWD" python src/optics_alignment_regression/train.py --lr 0.001 --epoch 150 --weightdecay 0.0001
 ```
 
 ---
